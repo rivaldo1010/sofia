@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Check } from "lucide-react";
 import { useCart } from "../store/cart";
+import { API_URL } from "../lib/api";
 
 const PROVINCIAS = [
   "Azuay", "Bolívar", "Cañar", "Carchi", "Chimborazo", "Cotopaxi",
@@ -64,7 +65,7 @@ export function Checkout() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

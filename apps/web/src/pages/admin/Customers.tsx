@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { User, Mail, Phone, Calendar, ShoppingBag } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 async function fetchCustomers() {
-  const res = await fetch("/api/admin/customers", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/customers`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando clientes");
   return res.json();
 }

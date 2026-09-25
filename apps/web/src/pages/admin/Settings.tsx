@@ -11,15 +11,16 @@ import {
   MessageCircle,
   Save,
 } from "lucide-react";
+import { API_URL } from "../lib/api";
 
 async function fetchSettingsData() {
-  const res = await fetch("/api/admin/settings-info", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/settings-info`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando configuración");
   return res.json();
 }
 
 async function fetchAdminConfig() {
-  const res = await fetch("/api/admin/config", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/config`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando config");
   return res.json();
 }
@@ -57,7 +58,7 @@ export function Settings() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/admin/config", {
+      const res = await fetch(`${API_URL}/admin/config`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

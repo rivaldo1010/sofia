@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 type Category = {
   id: string;
@@ -11,7 +12,7 @@ type Category = {
 };
 
 async function fetchCategories() {
-  const res = await fetch("/api/admin/categories", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/categories`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando categorías");
   return res.json();
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Upload, X, Loader2 } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 type Props = {
   productId: string | null;
@@ -38,7 +39,7 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
   const { data: categories } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const r = await fetch("/api/admin/categories", { credentials: "include" });
+      const r = await fetch(`${API_URL}/admin/categories`, { credentials: "include" });
       return r.json();
     },
   });

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, PackageX, TrendingUp, Package } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 async function fetchInventory() {
-  const res = await fetch("/api/admin/inventory", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/inventory`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando inventario");
   return res.json();
 }

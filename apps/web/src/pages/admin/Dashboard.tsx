@@ -6,9 +6,10 @@ import {
   Users,
   AlertTriangle,
 } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 async function fetchStats() {
-  const res = await fetch("/api/admin/stats", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/stats`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando estadísticas");
   return res.json();
 }

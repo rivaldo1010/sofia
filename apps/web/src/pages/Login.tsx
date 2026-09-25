@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
+import { API_URL } from "../lib/api";
 
 export function Login() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function Login() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

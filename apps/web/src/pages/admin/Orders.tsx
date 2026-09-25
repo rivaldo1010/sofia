@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Eye, X } from "lucide-react";
+import { API_URL } from "../../lib/api";
 
 type OrderItem = {
   id: string;
@@ -51,13 +52,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 async function fetchOrders() {
-  const res = await fetch("/api/admin/orders", { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/orders`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando pedidos");
   return res.json();
 }
 
 async function updateStatus(id: string, status: string) {
-  const res = await fetch(`/api/admin/orders/${id}/status`, {
+  const res = await fetch(`${API_URL}/admin/orders/${id}/status`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

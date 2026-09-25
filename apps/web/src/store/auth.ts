@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_URL } from "../lib/api";
 
 export type AuthUser = {
   id: string;
@@ -22,8 +23,8 @@ export const useAuth = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
   check: async () => {
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (res.ok) {
+      const res = await fetch(`${API_URL}/auth/me`, { credentials: "include" });
+await fetch(`${API_URL}/auth/logout`, {
         const user = await res.json();
         set({ user, loading: false });
       } else {

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Package, ChevronRight } from "lucide-react";
 import { useAuth } from "../store/auth";
+import { API_URL } from "../lib/api";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDIENTE: "bg-yellow-100 text-yellow-700",
@@ -13,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 async function fetchMyOrders() {
-  const res = await fetch("/api/auth/my-orders", { credentials: "include" });
+  const res = await fetch(`${API_URL}/auth/my-orders`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando pedidos");
   return res.json();
 }

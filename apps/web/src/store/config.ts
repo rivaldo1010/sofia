@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_URL } from "../lib/api";
 
 type Config = {
   whatsappNumber: string | null;
@@ -18,7 +19,7 @@ export const useConfig = create<Config>((set) => ({
   load: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/api/config");
+      const res = await fetch(`${API_URL}/config`);
       if (res.ok) {
         const data = await res.json();
         set({

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_URL } from "../lib/api";
 
 type FavoritesState = {
   ids: string[];
@@ -17,7 +18,7 @@ export const useFavorites = create<FavoritesState>((set, get) => ({
   load: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/api/favorites/ids", { credentials: "include" });
+      const res = await fetch(`${API_URL}/favorites/ids`, { credentials: "include" });
       if (res.ok) {
         const ids = await res.json();
         set({ ids, loaded: true });

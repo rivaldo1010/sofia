@@ -3,9 +3,10 @@ import { Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
 import { useAuth } from "../store/auth";
+import { API_URL } from "../lib/api";
 
 async function fetchFavorites() {
-  const res = await fetch("/api/favorites", { credentials: "include" });
+  const res = await fetch(`${API_URL}/favorites`, { credentials: "include" });
   if (!res.ok) throw new Error("Error cargando favoritos");
   return res.json();
 }
