@@ -1,0 +1,18 @@
+{
+  "name": "Sofía",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter api prisma migrate dev",
+    "db:seed": "pnpm --filter api seed",
+    "admin:create": "pnpm --filter api admin:create"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

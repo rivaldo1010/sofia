@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: Sofía-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: Sofía
+      POSTGRES_PASSWORD: Sofía_dev_password
+      POSTGRES_DB: Sofía_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - Sofía_pgdata:/var/lib/postgresql/data
+
+volumes:
+  Sofía_pgdata:
