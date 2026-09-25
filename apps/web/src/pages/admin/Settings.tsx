@@ -11,7 +11,7 @@ import {
   MessageCircle,
   Save,
 } from "lucide-react";
-import { API_URL } from "../lib/api";
+import { API_URL } from "../../lib/api";
 
 async function fetchSettingsData() {
   const res = await fetch(`${API_URL}/admin/settings-info`, { credentials: "include" });

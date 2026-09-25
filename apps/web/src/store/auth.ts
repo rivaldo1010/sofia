@@ -24,7 +24,7 @@ export const useAuth = create<AuthState>((set) => ({
   check: async () => {
     try {
       const res = await fetch(`${API_URL}/auth/me`, { credentials: "include" });
-await fetch(`${API_URL}/auth/logout`, {
+      if (res.ok) {
         const user = await res.json();
         set({ user, loading: false });
       } else {
@@ -35,7 +35,7 @@ await fetch(`${API_URL}/auth/logout`, {
     }
   },
   logout: async () => {
-    await fetch("/api/auth/logout", {
+    await fetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
