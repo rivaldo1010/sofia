@@ -39,14 +39,18 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
   const { data: categories } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const r = await fetch(`${API_URL}/admin/categories`, { credentials: "include" });
+      const r = await fetch(`${API_URL}/admin/categories`, {
+        credentials: "include",
+      });
       return r.json();
     },
   });
 
   useEffect(() => {
     if (productId) {
-      fetch(`/api/admin/products/${productId}`, { credentials: "include" })
+      fetch(`${API_URL}/admin/products/${productId}`, {
+        credentials: "include",
+      })
         .then((r) => r.json())
         .then((p) => {
           setForm({
@@ -101,20 +105,29 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("/api/admin/upload", {
+      const res = await fetch(`${API_URL}/admin/upload`, {
         method: "POST",
         body: formData,
         credentials: "include",
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error subiendo imagen");
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          `Error del servidor (${res.status}): ${text.slice(0, 200)}`
+        );
       }
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error subiendo imagen");
+      }
 
-      const currentImages = form.images ? form.images.split("\n").filter(Boolean) : [];
+      const currentImages = form.images
+        ? form.images.split("\n").filter(Boolean)
+        : [];
       currentImages.push(data.url);
       setForm({ ...form, images: currentImages.join("\n") });
     } catch (err: any) {
@@ -138,18 +151,26 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("/api/admin/upload", {
+      const res = await fetch(`${API_URL}/admin/upload`, {
         method: "POST",
         body: formData,
         credentials: "include",
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error subiendo imagen");
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          `Error del servidor (${res.status}): ${text.slice(0, 200)}`
+        );
       }
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error subiendo imagen");
+      }
+
       setForm({
         ...form,
         colorImages: { ...form.colorImages, [color]: data.url },
@@ -177,12 +198,24 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
         brand: form.brand,
         gender: form.gender,
         categoryId: form.categoryId,
-        images: form.images.split("\n").map((s) => s.trim()).filter(Boolean),
+        images: form.images
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
         colorImages:
           Object.keys(form.colorImages).length > 0 ? form.colorImages : null,
-        colors: form.colors.split(",").map((s) => s.trim()).filter(Boolean),
-        sizes: form.sizes.split(",").map((s) => s.trim()).filter(Boolean),
-        keywords: form.keywords.split(",").map((s) => s.trim()).filter(Boolean),
+        colors: form.colors
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        sizes: form.sizes
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        keywords: form.keywords
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
         stock: Number(form.stock),
         featured: form.featured,
         isNew: form.isNew,
@@ -190,8 +223,8 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
       };
 
       const url = productId
-        ? `/api/admin/products/${productId}`
-        : "/api/admin/products";
+        ? `${API_URL}/admin/products/${productId}`
+        : `${API_URL}/admin/products`;
       const method = productId ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -199,6 +232,7 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
         credentials: "include",
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || "Error guardando");
@@ -229,7 +263,9 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Slug (URL) *</label>
+          <label className="block text-sm font-medium mb-1">
+            Slug (URL) *
+          </label>
           <input
             name="slug"
             value={form.slug}
@@ -267,7 +303,9 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Precio anterior</label>
+          <label className="block text-sm font-medium mb-1">
+            Precio anterior
+          </label>
           <input
             name="comparePrice"
             type="number"
@@ -360,7 +398,7 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
             />
           </label>
           <p className="text-xs text-neutral-500 mt-1">
-            Formatos: JPG, PNG, WEBP. Máximo 5 MB.
+            Formatos: JPG, PNG, WEBP. Máximo 15 MB.
           </p>
         </div>
 
@@ -375,7 +413,11 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
                   key={i}
                   className="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200"
                 >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => {
@@ -408,7 +450,9 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
       {/* Colores y Tallas */}
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Colores (coma)</label>
+          <label className="block text-sm font-medium mb-1">
+            Colores (coma)
+          </label>
           <input
             name="colors"
             value={form.colors}
@@ -418,7 +462,9 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Tallas (coma)</label>
+          <label className="block text-sm font-medium mb-1">
+            Tallas (coma)
+          </label>
           <input
             name="sizes"
             value={form.sizes}
@@ -436,7 +482,8 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
             Imágenes por color (opcional)
           </label>
           <p className="text-xs text-neutral-500 mb-3">
-            Sube una imagen para cada color. Si un color no tiene imagen, se usará la principal.
+            Sube una imagen para cada color. Si un color no tiene imagen, se
+            usará la principal.
           </p>
           <div className="space-y-2">
             {form.colors
@@ -554,7 +601,9 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
       </div>
 
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>
+        <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
+          {error}
+        </p>
       )}
 
       <div className="flex gap-3 pt-4 border-t border-neutral-200">

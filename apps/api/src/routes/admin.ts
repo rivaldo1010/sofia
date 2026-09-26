@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
-import multer from "multer";                              // ← NUEVO
+import multer from "multer";
 
 export const adminRouter = Router();
 
 // Todas las rutas requieren admin
 adminRouter.use(requireAuth, requireAdmin);
 
-//config multer
+// Config multer — 15 MB para aceptar fotos de celular
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 },
 });
 
 adminRouter.get("/stats", async (_req, res) => {
@@ -77,7 +77,6 @@ adminRouter.get("/stats", async (_req, res) => {
 
 // ==================== PRODUCTOS ====================
 
-// Listar todos los productos (incluye inactivos)
 adminRouter.get("/products", async (req, res) => {
   try {
     const { q, gender, category } = req.query as Record<string, string>;
@@ -103,7 +102,6 @@ adminRouter.get("/products", async (req, res) => {
   }
 });
 
-// Obtener un producto
 adminRouter.get("/products/:id", async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
@@ -117,14 +115,13 @@ adminRouter.get("/products/:id", async (req, res) => {
   }
 });
 
-// Crear producto
 adminRouter.post("/products", async (req, res) => {
   try {
     const {
-  name, slug, description, price, comparePrice, sku, brand,
-  gender, categoryId, images, colorImages, colors, sizes, keywords,
-  stock, featured, isNew, active,
-} = req.body;
+      name, slug, description, price, comparePrice, sku, brand,
+      gender, categoryId, images, colorImages, colors, sizes, keywords,
+      stock, featured, isNew, active,
+    } = req.body;
 
     if (!name || !slug || !price || !sku || !gender || !categoryId) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
@@ -153,7 +150,6 @@ adminRouter.post("/products", async (req, res) => {
       include: { category: true },
     });
 
-    // Crear variantes (una por cada combinación color × talla)
     const cols = colors || [];
     const szs = sizes || [];
     if (cols.length && szs.length) {
@@ -179,7 +175,6 @@ adminRouter.post("/products", async (req, res) => {
   }
 });
 
-// Actualizar producto
 adminRouter.put("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,9 +185,9 @@ adminRouter.put("/products/:id", async (req, res) => {
     if (data.comparePrice) data.comparePrice = Number(data.comparePrice);
     else if (data.comparePrice === "" || data.comparePrice === null)
       data.comparePrice = null;
-        if (data.colorImages === undefined) delete data.colorImages;
+
+    if (data.colorImages === undefined) delete data.colorImages;
     else if (data.colorImages === "") data.colorImages = null;
-    
 
     const product = await prisma.product.update({
       where: { id },
@@ -205,7 +200,6 @@ adminRouter.put("/products/:id", async (req, res) => {
   }
 });
 
-// Eliminar producto
 adminRouter.delete("/products/:id", async (req, res) => {
   try {
     await prisma.product.delete({ where: { id: req.params.id } });
@@ -215,7 +209,6 @@ adminRouter.delete("/products/:id", async (req, res) => {
   }
 });
 
-// Listar categorías (para el dropdown del form)
 adminRouter.get("/categories", async (_req, res) => {
   const categories = await prisma.category.findMany({
     orderBy: [{ gender: "asc" }, { name: "asc" }],
@@ -287,7 +280,6 @@ adminRouter.get("/customers", async (_req, res) => {
       },
     });
 
-    // Calcular total gastado por cada cliente
     const customers = await Promise.all(
       users.map(async (u) => {
         const orders = await prisma.order.findMany({
@@ -316,46 +308,74 @@ adminRouter.get("/customers", async (_req, res) => {
 
 // ==================== UPLOAD DE IMÁGENES ====================
 
-adminRouter.post("/upload", upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No se recibió archivo" });
-    }
-
-    const apiKey = process.env.IMGBB_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "IMGBB_API_KEY no configurada" });
-    }
-
-    const base64 = req.file.buffer.toString("base64");
-
-    const formData = new URLSearchParams();
-    formData.append("image", base64);
-
-    const response = await fetch(
-      `https://api.imgbb.com/1/upload?key=${apiKey}`,
-      {
-        method: "POST",
-        body: formData,
+adminRouter.post(
+  "/upload",
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err) {
+        console.error("Error de multer:", err);
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({
+            error: "La imagen pesa más de 15 MB. Intenta con una más pequeña.",
+          });
+        }
+        return res.status(400).json({
+          error: err.message || "Error al procesar la imagen",
+        });
       }
-    );
-
-    const data = await response.json();
-
-    if (!data.success) {
-      return res.status(500).json({ error: data.error?.message || "Error en imgbb" });
-    }
-
-    res.json({
-      url: data.data.display_url,
-      deleteUrl: data.data.delete_url,
-      thumb: data.data.thumb?.url,
+      next();
     });
-  } catch (err: any) {
-    console.error("Error subiendo imagen:", err);
-    res.status(500).json({ error: err.message });
+  },
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No se recibió archivo" });
+      }
+
+      console.log(
+        "Archivo recibido:",
+        req.file.originalname,
+        req.file.size,
+        "bytes"
+      );
+
+      const apiKey = process.env.IMGBB_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "IMGBB_API_KEY no configurada" });
+      }
+
+      const base64 = req.file.buffer.toString("base64");
+
+      const formData = new URLSearchParams();
+      formData.append("image", base64);
+
+      const response = await fetch(
+        `https://api.imgbb.com/1/upload?key=${apiKey}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.success) {
+        return res
+          .status(500)
+          .json({ error: data.error?.message || "Error en imgbb" });
+      }
+
+      res.json({
+        url: data.data.display_url,
+        deleteUrl: data.data.delete_url,
+        thumb: data.data.thumb?.url,
+      });
+    } catch (err: any) {
+      console.error("Error subiendo imagen:", err);
+      res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 // ==================== INFO DEL SISTEMA ====================
 
@@ -408,12 +428,7 @@ adminRouter.put("/config", async (req, res) => {
 
     const config = await prisma.config.upsert({
       where: { id: "global" },
-      update: {
-        whatsappNumber,
-        whatsappMessage,
-        storeName,
-        currency,
-      },
+      update: { whatsappNumber, whatsappMessage, storeName, currency },
       create: {
         id: "global",
         whatsappNumber,
