@@ -33,17 +33,19 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   const price = Number(product.price);
-  const comparePrice = product.comparePrice ? Number(product.comparePrice) : null;
+  const comparePrice = product.comparePrice
+    ? Number(product.comparePrice)
+    : null;
   const discount = comparePrice
     ? Math.round((1 - price / comparePrice) * 100)
     : 0;
 
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden border border-neutral-100 hover:border-neutral-300 hover:shadow-xl transition-all duration-300">
+    <div className="group relative bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-100 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl transition-all duration-300">
       {/* Imagen */}
       <Link
         to={`/producto/${product.slug}`}
-        className="block relative aspect-[4/5] bg-neutral-100 overflow-hidden"
+        className="block relative aspect-[4/5] bg-neutral-100 dark:bg-neutral-800 overflow-hidden"
       >
         <img
           src={product.images[0]}
@@ -69,7 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         {/* Badge de agotado */}
         {product.stock === 0 && (
-          <span className="absolute top-3 left-3 bg-neutral-900 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <span className="absolute top-3 left-3 bg-neutral-900 dark:bg-white text-white dark:text-black text-xs font-bold px-2 py-1 rounded-full">
             Agotado
           </span>
         )}
@@ -80,11 +82,11 @@ export function ProductCard({ product }: { product: Product }) {
         type="button"
         onClick={handleFavoriteClick}
         aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}
-        className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white transition shadow-sm z-10"
+        className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur rounded-full hover:bg-white dark:hover:bg-neutral-800 transition shadow-sm z-10"
       >
         <Heart
           className={`w-4 h-4 transition ${
-            isFav ? "fill-red-500 text-red-500" : "text-neutral-700"
+            isFav ? "fill-red-500 text-red-500" : "text-neutral-700 dark:text-neutral-300"
           }`}
         />
       </button>
@@ -92,17 +94,17 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Info */}
       <div className="p-4">
         <Link to={`/producto/${product.slug}`}>
-          <h3 className="font-medium text-sm text-neutral-900 truncate hover:text-neutral-600 transition">
+          <h3 className="font-medium text-sm text-neutral-900 dark:text-white truncate hover:text-neutral-600 dark:hover:text-neutral-300 transition">
             {product.name}
           </h3>
         </Link>
 
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-lg font-bold text-neutral-900">
+          <span className="text-lg font-bold text-neutral-900 dark:text-white">
             ${price.toFixed(2)}
           </span>
           {comparePrice && comparePrice > price && (
-            <span className="text-sm text-neutral-400 line-through">
+            <span className="text-sm text-neutral-400 dark:text-neutral-500 line-through">
               ${comparePrice.toFixed(2)}
             </span>
           )}
@@ -115,12 +117,12 @@ export function ProductCard({ product }: { product: Product }) {
               <span
                 key={color}
                 title={color}
-                className="w-3 h-3 rounded-full border border-neutral-300"
+                className="w-3 h-3 rounded-full border border-neutral-300 dark:border-neutral-600"
                 style={{ backgroundColor: colorToHex(color) }}
               />
             ))}
             {product.colors.length > 4 && (
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 +{product.colors.length - 4}
               </span>
             )}
@@ -130,7 +132,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           disabled={product.stock === 0}
-          className="mt-3 w-full py-2 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 transition disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed"
+          className="mt-3 w-full py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-black text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition disabled:bg-neutral-200 dark:disabled:bg-neutral-800 disabled:text-neutral-400 disabled:cursor-not-allowed"
         >
           {product.stock === 0 ? "Agotado" : "Agregar al carrito"}
         </button>
@@ -139,7 +141,6 @@ export function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// Convierte nombres de color a un código hex para mostrar el circulito
 function colorToHex(color: string): string {
   const map: Record<string, string> = {
     negro: "#000000",
