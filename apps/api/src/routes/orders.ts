@@ -28,23 +28,29 @@ ordersRouter.post("/", async (req, res) => {
       });
 
       if (!product || !product.active) {
-        return res.status(400).json({ error: `Producto no disponible: ${it.productId}` });
+        return res
+          .status(400)
+          .json({ error: `Producto no disponible: ${it.productId}` });
       }
+
+      // Fallback: si no hay talla, usar "Única"
+      const color = it.color || "Única";
+      const size = it.size || "Única";
 
       const variant = await prisma.variant.findUnique({
         where: {
           productId_color_size: {
             productId: it.productId,
-            color: it.color,
-            size: it.size,
+            color,
+            size,
           },
         },
       });
 
       if (!variant || variant.stock < it.quantity) {
-        return res
-          .status(400)
-          .json({ error: `Sin stock suficiente: ${product.name} (${it.color}/${it.size})` });
+        return res.status(400).json({
+          error: `Sin stock suficiente: ${product.name} (${color}/${size})`,
+        });
       }
 
       const price = Number(product.price);
@@ -55,8 +61,8 @@ ordersRouter.post("/", async (req, res) => {
         name: product.name,
         price: product.price,
         quantity: it.quantity,
-        color: it.color,
-        size: it.size,
+        color,
+        size,
         image: product.images[0],
       });
     }
