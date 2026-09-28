@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
 import { ProductForm } from "./ProductForm";
+import { API_URL } from "../../lib/api";
 
 type Product = {
   id: string;
@@ -18,13 +19,15 @@ type Product = {
 async function fetchProducts(q: string) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
-  const res = await fetch(`/api/admin/products?${params}`, { credentials: "include" });
+  const res = await fetch(`${API_URL}/admin/products?${params}`, {
+    credentials: "include",
+  });
   if (!res.ok) throw new Error("Error cargando productos");
   return res.json();
 }
 
 async function deleteProduct(id: string) {
-  const res = await fetch(`/api/admin/products/${id}`, {
+  const res = await fetch(`${API_URL}/admin/products/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -45,7 +48,8 @@ export function Products() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
   });
 
   function handleDelete(id: string, name: string) {
@@ -57,11 +61,16 @@ export function Products() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-black tracking-tight">Productos</h1>
-          <p className="text-neutral-500 mt-1">{data?.length || 0} productos en total</p>
+          <p className="text-neutral-500 mt-1">
+            {data?.length || 0} productos en total
+          </p>
         </div>
         <button
           type="button"
-          onClick={() => { setEditingId(null); setShowForm(true); }}
+          onClick={() => {
+            setEditingId(null);
+            setShowForm(true);
+          }}
           className="flex items-center gap-2 px-5 py-3 bg-black text-white rounded-full font-semibold hover:bg-neutral-800 transition"
         >
           <Plus className="w-4 h-4" />
@@ -84,7 +93,9 @@ export function Products() {
         {isLoading ? (
           <div className="p-8 text-center text-neutral-500">Cargando...</div>
         ) : !data || data.length === 0 ? (
-          <div className="p-8 text-center text-neutral-500">No hay productos. Crea el primero.</div>
+          <div className="p-8 text-center text-neutral-500">
+            No hay productos. Crea el primero.
+          </div>
         ) : (
           <table className="w-full">
             <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
@@ -99,35 +110,63 @@ export function Products() {
             </thead>
             <tbody>
               {data.map((p: Product) => (
-                <tr key={p.id} className="border-t border-neutral-100 hover:bg-neutral-50">
+                <tr
+                  key={p.id}
+                  className="border-t border-neutral-100 hover:bg-neutral-50"
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <img src={p.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover bg-neutral-100" />
+                      <img
+                        src={p.images[0]}
+                        alt=""
+                        className="w-12 h-12 rounded-lg object-cover bg-neutral-100"
+                      />
                       <div className="min-w-0">
-                        <p className="font-medium truncate max-w-[200px]">{p.name}</p>
+                        <p className="font-medium truncate max-w-[200px]">
+                          {p.name}
+                        </p>
                         <p className="text-xs text-neutral-500">{p.gender}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-sm text-neutral-600">{p.category.name}</td>
-                  <td className="px-4 py-3 font-medium">${Number(p.price).toFixed(2)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      p.stock === 0 ? "bg-red-100 text-red-700"
-                      : p.stock < 10 ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                    }`}>{p.stock}</span>
+                  <td className="px-4 py-3 hidden md:table-cell text-sm text-neutral-600">
+                    {p.category.name}
+                  </td>
+                  <td className="px-4 py-3 font-medium">
+                    ${Number(p.price).toFixed(2)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      p.active ? "bg-green-100 text-green-700" : "bg-neutral-100 text-neutral-600"
-                    }`}>{p.active ? "Activo" : "Inactivo"}</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        p.stock === 0
+                          ? "bg-red-100 text-red-700"
+                          : p.stock < 10
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {p.stock}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        p.active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-neutral-100 text-neutral-600"
+                      }`}
+                    >
+                      {p.active ? "Activo" : "Inactivo"}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex gap-1">
                       <button
                         type="button"
-                        onClick={() => { setEditingId(p.id); setShowForm(true); }}
+                        onClick={() => {
+                          setEditingId(p.id);
+                          setShowForm(true);
+                        }}
                         className="p-2 hover:bg-neutral-100 rounded-lg transition"
                       >
                         <Pencil className="w-4 h-4" />
@@ -155,18 +194,30 @@ export function Products() {
               <h2 className="text-xl font-black">
                 {editingId ? "Editar producto" : "Nuevo producto"}
               </h2>
-              <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="p-2 hover:bg-neutral-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                }}
+                className="p-2 hover:bg-neutral-100 rounded-lg"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <ProductForm
               productId={editingId}
               onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+                queryClient.invalidateQueries({
+                  queryKey: ["admin-products"],
+                });
                 setShowForm(false);
                 setEditingId(null);
               }}
-              onCancel={() => { setShowForm(false); setEditingId(null); }}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingId(null);
+              }}
             />
           </div>
         </div>
