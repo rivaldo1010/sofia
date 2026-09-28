@@ -15,6 +15,8 @@ const empty = {
   description: "",
   price: "",
   comparePrice: "",
+  wholesalePrice: "",
+  wholesaleMinQty: "",
   sku: "",
   brand: "",
   gender: "HOMBRE",
@@ -59,6 +61,8 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
             description: p.description,
             price: String(p.price),
             comparePrice: p.comparePrice ? String(p.comparePrice) : "",
+            wholesalePrice: p.wholesalePrice ? String(p.wholesalePrice) : "",
+            wholesaleMinQty: p.wholesaleMinQty ? String(p.wholesaleMinQty) : "",
             sku: p.sku,
             brand: p.brand || "",
             gender: p.gender,
@@ -194,6 +198,12 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
         description: form.description,
         price: Number(form.price),
         comparePrice: form.comparePrice ? Number(form.comparePrice) : null,
+        wholesalePrice: form.wholesalePrice
+          ? Number(form.wholesalePrice)
+          : null,
+        wholesaleMinQty: form.wholesaleMinQty
+          ? Number(form.wholesaleMinQty)
+          : null,
         sku: form.sku,
         brand: form.brand,
         gender: form.gender,
@@ -324,6 +334,48 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
             required
             className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg"
           />
+        </div>
+      </div>
+
+      {/* Precio por mayor */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
+        <div>
+          <p className="text-sm font-bold text-blue-900 mb-1">
+            💰 Precio por mayor (opcional)
+          </p>
+          <p className="text-xs text-blue-700 mb-3">
+            Si el cliente compra la cantidad mínima o más, se aplica el precio
+            por mayor automáticamente.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Precio por mayor (unidad)
+            </label>
+            <input
+              name="wholesalePrice"
+              type="number"
+              step="0.01"
+              value={form.wholesalePrice}
+              onChange={onChange}
+              placeholder="Ej: 8.50"
+              className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Cantidad mínima para mayoreo
+            </label>
+            <input
+              name="wholesaleMinQty"
+              type="number"
+              value={form.wholesaleMinQty}
+              onChange={onChange}
+              placeholder="Ej: 6"
+              className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
       </div>
 
