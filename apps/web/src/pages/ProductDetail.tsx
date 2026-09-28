@@ -29,7 +29,6 @@ export function ProductDetail() {
   const [colorImageUrl, setColorImageUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
 
-  // Inicializar color y talla
   useEffect(() => {
     if (product && !selectedColor) {
       setSelectedColor(product.colors[0]);
@@ -37,7 +36,6 @@ export function ProductDetail() {
     }
   }, [product, selectedColor]);
 
-  // Actualizar imagen según color
   useEffect(() => {
     if (product && selectedColor && product.colorImages) {
       const colorImages = product.colorImages as Record<string, string>;
@@ -52,7 +50,6 @@ export function ProductDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, selectedColor]);
 
-  // Precargar TODAS las imágenes de colores
   useEffect(() => {
     if (product && product.colorImages) {
       const colorImages = product.colorImages as Record<string, string>;
@@ -61,7 +58,6 @@ export function ProductDetail() {
         img.src = url;
       });
     }
-    // También precargar las imágenes generales
     if (product && product.images) {
       product.images.forEach((url) => {
         const img = new Image();
@@ -101,13 +97,28 @@ export function ProductDetail() {
     );
   }
 
-  const price = Number(product.price);
+  const basePrice = Number(product.price);
   const comparePrice = product.comparePrice
     ? Number(product.comparePrice)
     : null;
   const discount = comparePrice
-    ? Math.round((1 - price / comparePrice) * 100)
+    ? Math.round((1 - basePrice / comparePrice) * 100)
     : 0;
+
+  // Precio por mayor
+  const wholesalePrice = (product as any).wholesalePrice
+    ? Number((product as any).wholesalePrice)
+    : null;
+  const wholesaleMinQty = (product as any).wholesaleMinQty
+    ? Number((product as any).wholesaleMinQty)
+    : null;
+
+  const hasWholesale = wholesalePrice && wholesaleMinQty;
+  const isWholesaleActive = hasWholesale && quantity >= wholesaleMinQty!;
+
+  // Precio unitario actual (con o sin mayoreo)
+  const currentUnitPrice = isWholesaleActive ? wholesalePrice! : basePrice;
+  const totalPrice = currentUnitPrice * quantity;
 
   const currentImage = colorImageUrl || product.images[selectedImage];
 
@@ -115,7 +126,7 @@ export function ProductDetail() {
     addToCart({
       productId: product.id,
       name: product.name,
-      price,
+      price: currentUnitPrice,
       image: currentImage,
       color: selectedColor,
       size: selectedSize,
@@ -129,18 +140,20 @@ export function ProductDetail() {
   const handleWhatsApp = () => {
     if (!whatsappNumber) return;
 
-    const totalPrice = (price * quantity).toFixed(2);
-
-    const message = `Hola Sofía! Quiero comprar:
-
-🛍️ ${product.name}
+    const itemLines = `🛍️ ${product.name}
 🎨 Color: ${selectedColor}
 📏 Talla: ${selectedSize}
 📦 Cantidad: ${quantity}
-💰 Precio: $${totalPrice}
+💰 Precio unitario: $${currentUnitPrice.toFixed(2)}${
+      isWholesaleActive ? " (por mayor)" : ""
+    }`;
+
+    const message = `Hola Sofía! Quiero comprar:
+
+${itemLines}
 
 ━━━━━━━━━━━━━
-TOTAL: $${totalPrice}
+TOTAL: $${totalPrice.toFixed(2)}
 
 ¿Me confirman disponibilidad y datos de pago?`;
 
@@ -214,21 +227,52 @@ TOTAL: $${totalPrice}
             {product.name}
           </h1>
 
-          <div className="flex items-center gap-3 mb-6">
+          {/* Precio principal */}
+          <div className="flex items-center gap-3 mb-2">
             <span className="text-3xl font-bold text-black dark:text-white">
-              ${price.toFixed(2)}
+              ${currentUnitPrice.toFixed(2)}
             </span>
-            {comparePrice && comparePrice > price && (
-              <>
-                <span className="text-lg text-neutral-400 dark:text-neutral-500 line-through">
-                  ${comparePrice.toFixed(2)}
-                </span>
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  -{discount}%
-                </span>
-              </>
+            {isWholesaleActive ? (
+              <span className="text-lg text-neutral-400 dark:text-neutral-500 line-through">
+                ${basePrice.toFixed(2)}
+              </span>
+            ) : (
+              comparePrice &&
+              comparePrice > basePrice && (
+                <>
+                  <span className="text-lg text-neutral-400 dark:text-neutral-500 line-through">
+                    ${comparePrice.toFixed(2)}
+                  </span>
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    -{discount}%
+                  </span>
+                </>
+              )
             )}
           </div>
+
+          {/* Etiqueta precio por mayor activo */}
+          {isWholesaleActive && (
+            <div className="mb-4 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-3 py-1.5 rounded-full text-xs font-bold">
+              ✅ Precio por mayor aplicado
+            </div>
+          )}
+
+          {/* Aviso de precio por mayor disponible */}
+          {hasWholesale && !isWholesaleActive && (
+            <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
+              <p className="text-sm text-blue-900 dark:text-blue-300">
+                💰 <span className="font-bold">Precio por mayor:</span> $
+                {wholesalePrice!.toFixed(2)} c/u desde {wholesaleMinQty}{" "}
+                unidades
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
+                Te faltan {wholesaleMinQty! - quantity}{" "}
+                {wholesaleMinQty! - quantity === 1 ? "unidad" : "unidades"}{" "}
+                para este precio
+              </p>
+            </div>
+          )}
 
           <p className="text-neutral-600 dark:text-neutral-300 mb-6">
             {product.description}
@@ -319,6 +363,22 @@ TOTAL: $${totalPrice}
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
               {product.stock > 0 ? `${product.stock} disponibles` : "Agotado"}
             </p>
+          </div>
+
+          {/* Total dinámico */}
+          <div className="mb-6 bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
+            <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400 mb-1">
+              <span>Precio unitario</span>
+              <span>${currentUnitPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+              <span>Cantidad</span>
+              <span>x{quantity}</span>
+            </div>
+            <div className="flex justify-between text-lg font-black text-black dark:text-white border-t border-neutral-200 dark:border-neutral-700 pt-2">
+              <span>Total</span>
+              <span>${totalPrice.toFixed(2)}</span>
+            </div>
           </div>
 
           {/* Botones */}
