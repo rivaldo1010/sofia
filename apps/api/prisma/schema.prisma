@@ -73,6 +73,7 @@ model Product {
   comparePrice      Decimal?    @db.Decimal(10, 2)
   wholesalePrice    Decimal?    @db.Decimal(10, 2)
   wholesaleMinQty   Int?
+  shippingCost      Decimal?    @db.Decimal(10, 2)
   sku               String      @unique
   brand             String?
   gender            Gender

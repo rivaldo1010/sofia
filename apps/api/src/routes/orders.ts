@@ -20,6 +20,7 @@ ordersRouter.post("/", async (req, res) => {
     }
 
     let subtotal = 0;
+    let shippingTotal = 0; // 👈 NUEVO: Acumulador de envío
     const validatedItems: any[] = [];
 
     for (const it of items) {
@@ -56,6 +57,11 @@ ordersRouter.post("/", async (req, res) => {
       const price = Number(product.price);
       subtotal += price * it.quantity;
 
+      // 👇 NUEVO: Sumar el costo de envío del producto (multiplicado por cantidad)
+      // Si el producto no tiene shippingCost configurado, usamos 4.99 por defecto.
+      const itemShippingCost = product.shippingCost ? Number(product.shippingCost) : 4.99;
+      shippingTotal += itemShippingCost * it.quantity;
+
       validatedItems.push({
         productId: product.id,
         name: product.name,
@@ -67,7 +73,9 @@ ordersRouter.post("/", async (req, res) => {
       });
     }
 
-    const shipping = deliveryMethod === "retiro" ? 0 : 4.99;
+    // 👇 NUEVO: Si es retiro en tienda, el envío es $0. Si no, usamos el total calculado.
+    const shipping = deliveryMethod === "retiro" ? 0 : shippingTotal;
+    
     const total = subtotal + shipping;
     const orderNumber = await generateOrderNumber();
 

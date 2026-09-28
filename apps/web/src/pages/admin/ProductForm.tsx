@@ -17,6 +17,7 @@ const empty = {
   comparePrice: "",
   wholesalePrice: "",
   wholesaleMinQty: "",
+  shippingCost: "", // 👈 NUEVO
   sku: "",
   brand: "",
   gender: "HOMBRE",
@@ -63,6 +64,7 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
             comparePrice: p.comparePrice ? String(p.comparePrice) : "",
             wholesalePrice: p.wholesalePrice ? String(p.wholesalePrice) : "",
             wholesaleMinQty: p.wholesaleMinQty ? String(p.wholesaleMinQty) : "",
+            shippingCost: p.shippingCost ? String(p.shippingCost) : "", // 👈 NUEVO
             sku: p.sku,
             brand: p.brand || "",
             gender: p.gender,
@@ -204,6 +206,7 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
         wholesaleMinQty: form.wholesaleMinQty
           ? Number(form.wholesaleMinQty)
           : null,
+        shippingCost: form.shippingCost ? Number(form.shippingCost) : null, // 👈 NUEVO
         sku: form.sku,
         brand: form.brand,
         gender: form.gender,
@@ -376,6 +379,34 @@ export function ProductForm({ productId, onSuccess, onCancel }: Props) {
               className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+        </div>
+      </div>
+
+      {/* 👇 NUEVO: Costo de envío */}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-4">
+        <div>
+          <p className="text-sm font-bold text-green-900 mb-1">
+            🚚 Costo de envío (opcional)
+          </p>
+          <p className="text-xs text-green-700 mb-3">
+            Si lo dejas vacío, se aplicará el envío por defecto de $4.99. Si el
+            cliente elige "Retiro en tienda", el envío es $0.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Costo de envío ($)
+          </label>
+          <input
+            name="shippingCost"
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.shippingCost}
+            onChange={onChange}
+            placeholder="Ej: 5.00"
+            className="w-full px-3 py-2 bg-white border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
         </div>
       </div>
 

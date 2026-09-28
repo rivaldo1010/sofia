@@ -119,7 +119,7 @@ adminRouter.post("/products", async (req, res) => {
   try {
     const {
       name, slug, description, price, comparePrice,
-      wholesalePrice, wholesaleMinQty,
+      wholesalePrice, wholesaleMinQty, shippingCost,
       sku, brand, gender, categoryId,
       images, colorImages, colors, sizes, keywords,
       stock, featured, isNew, active,
@@ -137,6 +137,7 @@ adminRouter.post("/products", async (req, res) => {
         comparePrice: comparePrice ? Number(comparePrice) : null,
         wholesalePrice: wholesalePrice ? Number(wholesalePrice) : null,
         wholesaleMinQty: wholesaleMinQty ? Number(wholesaleMinQty) : null,
+        shippingCost: shippingCost ? Number(shippingCost) : null,
         sku,
         brand: brand || null,
         gender,
@@ -154,19 +155,18 @@ adminRouter.post("/products", async (req, res) => {
       include: { category: true },
     });
 
-    const cols = colors || [];
-    const szs = sizes || [];
-    if (cols.length && szs.length) {
-      const stockPerVariant = Math.max(
-        1,
-        Math.floor((Number(stock) || 0) / (cols.length * szs.length))
-      );
-      for (const color of cols) {
-        for (const size of szs) {
-          await prisma.variant.create({
-            data: { productId: product.id, color, size, stock: stockPerVariant },
-          });
-        }
+    // 👇 FIX: Siempre crear al menos una variante (aunque no tenga tallas/colores)
+    const cols = colors && colors.length > 0 ? colors : ["Única"];
+    const szs = sizes && sizes.length > 0 ? sizes : ["Única"];
+    const stockPerVariant = Math.max(
+      1,
+      Math.floor((Number(stock) || 0) / (cols.length * szs.length))
+    );
+    for (const color of cols) {
+      for (const size of szs) {
+        await prisma.variant.create({
+          data: { productId: product.id, color, size, stock: stockPerVariant },
+        });
       }
     }
 
@@ -197,6 +197,11 @@ adminRouter.put("/products/:id", async (req, res) => {
     if (data.wholesaleMinQty) data.wholesaleMinQty = Number(data.wholesaleMinQty);
     else if (data.wholesaleMinQty === "" || data.wholesaleMinQty === null)
       data.wholesaleMinQty = null;
+
+    // 👇 NUEVO BLOQUE PARA SHIPPING COST
+    if (data.shippingCost) data.shippingCost = Number(data.shippingCost);
+    else if (data.shippingCost === "" || data.shippingCost === null)
+      data.shippingCost = null;
 
     if (data.colorImages === undefined) delete data.colorImages;
     else if (data.colorImages === "") data.colorImages = null;
