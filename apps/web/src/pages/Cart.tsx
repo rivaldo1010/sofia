@@ -190,13 +190,6 @@ TOTAL: $${total().toFixed(2)}
             )}
 
             <Link
-              to="/checkout"
-              className="block w-full py-4 border-2 border-black dark:border-white text-black dark:text-white text-center rounded-full font-bold hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition mb-3"
-            >
-              Pago online
-            </Link>
-
-            <Link
               to="/hombre"
               className="block w-full py-3 text-neutral-500 dark:text-neutral-400 text-center rounded-full font-medium hover:text-black dark:hover:text-white transition text-sm"
             >
