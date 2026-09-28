@@ -118,8 +118,10 @@ adminRouter.get("/products/:id", async (req, res) => {
 adminRouter.post("/products", async (req, res) => {
   try {
     const {
-      name, slug, description, price, comparePrice, sku, brand,
-      gender, categoryId, images, colorImages, colors, sizes, keywords,
+      name, slug, description, price, comparePrice,
+      wholesalePrice, wholesaleMinQty,
+      sku, brand, gender, categoryId,
+      images, colorImages, colors, sizes, keywords,
       stock, featured, isNew, active,
     } = req.body;
 
@@ -133,6 +135,8 @@ adminRouter.post("/products", async (req, res) => {
         description: description || "",
         price: Number(price),
         comparePrice: comparePrice ? Number(comparePrice) : null,
+        wholesalePrice: wholesalePrice ? Number(wholesalePrice) : null,
+        wholesaleMinQty: wholesaleMinQty ? Number(wholesaleMinQty) : null,
         sku,
         brand: brand || null,
         gender,
@@ -185,6 +189,14 @@ adminRouter.put("/products/:id", async (req, res) => {
     if (data.comparePrice) data.comparePrice = Number(data.comparePrice);
     else if (data.comparePrice === "" || data.comparePrice === null)
       data.comparePrice = null;
+
+    if (data.wholesalePrice) data.wholesalePrice = Number(data.wholesalePrice);
+    else if (data.wholesalePrice === "" || data.wholesalePrice === null)
+      data.wholesalePrice = null;
+
+    if (data.wholesaleMinQty) data.wholesaleMinQty = Number(data.wholesaleMinQty);
+    else if (data.wholesaleMinQty === "" || data.wholesaleMinQty === null)
+      data.wholesaleMinQty = null;
 
     if (data.colorImages === undefined) delete data.colorImages;
     else if (data.colorImages === "") data.colorImages = null;

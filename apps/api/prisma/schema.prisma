@@ -65,32 +65,34 @@ model Category {
 }
 
 model Product {
-  id           String      @id @default(cuid())
-  name         String
-  slug         String      @unique
-  description  String
-  price        Decimal     @db.Decimal(10, 2)
-  comparePrice Decimal?    @db.Decimal(10, 2)
-  sku          String      @unique
-  brand        String?
-  gender       Gender
-  categoryId   String
-  category     Category    @relation(fields: [categoryId], references: [id])
-  images       String[]
-  colorImages  Json?
-  colors       String[]
-  sizes        String[]
-  keywords     String[]
-  stock        Int         @default(0)
-  active       Boolean     @default(true)
-  featured     Boolean     @default(false)
-  isNew        Boolean     @default(false)
-  soldCount    Int         @default(0)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  variants     Variant[]
-  orderItems   OrderItem[]
-  favorites    Favorite[]
+  id                String      @id @default(cuid())
+  name              String
+  slug              String      @unique
+  description       String
+  price             Decimal     @db.Decimal(10, 2)
+  comparePrice      Decimal?    @db.Decimal(10, 2)
+  wholesalePrice    Decimal?    @db.Decimal(10, 2)
+  wholesaleMinQty   Int?
+  sku               String      @unique
+  brand             String?
+  gender            Gender
+  categoryId        String
+  category          Category    @relation(fields: [categoryId], references: [id])
+  images            String[]
+  colorImages       Json?
+  colors            String[]
+  sizes             String[]
+  keywords          String[]
+  stock             Int         @default(0)
+  active            Boolean     @default(true)
+  featured          Boolean     @default(false)
+  isNew             Boolean     @default(false)
+  soldCount         Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  variants          Variant[]
+  orderItems        OrderItem[]
+  favorites         Favorite[]
 
   @@index([gender, categoryId, active])
   @@index([featured])
