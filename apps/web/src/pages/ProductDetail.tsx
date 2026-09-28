@@ -27,7 +27,9 @@ export function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [colorImageUrl, setColorImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
+  // Inicializar color y talla
   useEffect(() => {
     if (product && !selectedColor) {
       setSelectedColor(product.colors[0]);
@@ -35,14 +37,38 @@ export function ProductDetail() {
     }
   }, [product, selectedColor]);
 
+  // Actualizar imagen según color
   useEffect(() => {
     if (product && selectedColor && product.colorImages) {
       const colorImages = product.colorImages as Record<string, string>;
-      setColorImageUrl(colorImages[selectedColor] || null);
+      const newUrl = colorImages[selectedColor] || null;
+      if (newUrl !== colorImageUrl) {
+        setImageLoading(true);
+        setColorImageUrl(newUrl);
+      }
     } else {
       setColorImageUrl(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, selectedColor]);
+
+  // Precargar TODAS las imágenes de colores
+  useEffect(() => {
+    if (product && product.colorImages) {
+      const colorImages = product.colorImages as Record<string, string>;
+      Object.values(colorImages).forEach((url) => {
+        const img = new Image();
+        img.src = url;
+      });
+    }
+    // También precargar las imágenes generales
+    if (product && product.images) {
+      product.images.forEach((url) => {
+        const img = new Image();
+        img.src = url;
+      });
+    }
+  }, [product]);
 
   if (isLoading) {
     return (
@@ -83,12 +109,14 @@ export function ProductDetail() {
     ? Math.round((1 - price / comparePrice) * 100)
     : 0;
 
+  const currentImage = colorImageUrl || product.images[selectedImage];
+
   const handleAddToCart = () => {
     addToCart({
       productId: product.id,
       name: product.name,
       price,
-      image: colorImageUrl || product.images[0],
+      image: currentImage,
       color: selectedColor,
       size: selectedSize,
       quantity,
@@ -132,12 +160,21 @@ TOTAL: $${totalPrice}
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         {/* Galería */}
         <div>
-          <div className="aspect-square bg-neutral-100 dark:bg-neutral-800 rounded-2xl overflow-hidden mb-4">
+          <div className="aspect-square bg-neutral-100 dark:bg-neutral-800 rounded-2xl overflow-hidden mb-4 relative">
             <img
-              src={colorImageUrl || product.images[selectedImage]}
+              src={currentImage}
               alt={product.name}
-              className="w-full h-full object-cover"
+              onLoad={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                imageLoading ? "opacity-0" : "opacity-100"
+              }`}
             />
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white" />
+              </div>
+            )}
           </div>
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
@@ -309,7 +346,9 @@ TOTAL: $${totalPrice}
             >
               <Heart
                 className={`w-5 h-5 transition ${
-                  has(product.id) ? "fill-red-500 text-red-500" : "text-black dark:text-white"
+                  has(product.id)
+                    ? "fill-red-500 text-red-500"
+                    : "text-black dark:text-white"
                 }`}
               />
             </button>
