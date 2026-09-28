@@ -137,7 +137,10 @@ adminRouter.post("/products", async (req, res) => {
         comparePrice: comparePrice ? Number(comparePrice) : null,
         wholesalePrice: wholesalePrice ? Number(wholesalePrice) : null,
         wholesaleMinQty: wholesaleMinQty ? Number(wholesaleMinQty) : null,
-        shippingCost: shippingCost ? Number(shippingCost) : null,
+        shippingCost:
+          shippingCost !== undefined && shippingCost !== null && shippingCost !== ""
+            ? Number(shippingCost)
+            : null,
         sku,
         brand: brand || null,
         gender,
@@ -199,9 +202,15 @@ adminRouter.put("/products/:id", async (req, res) => {
       data.wholesaleMinQty = null;
 
     // 👇 NUEVO BLOQUE PARA SHIPPING COST
-    if (data.shippingCost) data.shippingCost = Number(data.shippingCost);
-    else if (data.shippingCost === "" || data.shippingCost === null)
+    if (
+      data.shippingCost !== undefined &&
+      data.shippingCost !== null &&
+      data.shippingCost !== ""
+    ) {
+      data.shippingCost = Number(data.shippingCost);
+    } else if (data.shippingCost === "" || data.shippingCost === null) {
       data.shippingCost = null;
+    }
 
     if (data.colorImages === undefined) delete data.colorImages;
     else if (data.colorImages === "") data.colorImages = null;
@@ -441,17 +450,43 @@ adminRouter.get("/config", async (_req, res) => {
 
 adminRouter.put("/config", async (req, res) => {
   try {
-    const { whatsappNumber, whatsappMessage, storeName, currency } = req.body;
+    const {
+      whatsappNumber,
+      whatsappMessage,
+      storeName,
+      currency,
+      shippingCost,
+    } = req.body;
+
+    const parsedShippingCost =
+      shippingCost === undefined ? undefined : Number(shippingCost);
+    if (
+      shippingCost !== undefined &&
+      (shippingCost === null ||
+        shippingCost === "" ||
+        parsedShippingCost === undefined ||
+        !Number.isFinite(parsedShippingCost) ||
+        parsedShippingCost < 0)
+    ) {
+      return res.status(400).json({ error: "Costo de envío inválido" });
+    }
 
     const config = await prisma.config.upsert({
       where: { id: "global" },
-      update: { whatsappNumber, whatsappMessage, storeName, currency },
+      update: {
+        whatsappNumber,
+        whatsappMessage,
+        storeName,
+        currency,
+        shippingCost: parsedShippingCost,
+      },
       create: {
         id: "global",
         whatsappNumber,
         whatsappMessage,
         storeName,
         currency: currency || "USD",
+        shippingCost: parsedShippingCost ?? 7.5,
       },
     });
 

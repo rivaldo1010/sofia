@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
-import { prisma } from './lib/prisma.js';
+import { prisma } from './prisma.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;

@@ -3,6 +3,15 @@ import { prisma } from "../lib/prisma.js";
 
 export const ordersRouter = Router();
 
+async function getShippingCost() {
+  const config = await prisma.config.upsert({
+    where: { id: "global" },
+    update: {},
+    create: { id: "global", shippingCost: 7.5 },
+  });
+  return Number(config.shippingCost);
+}
+
 async function generateOrderNumber() {
   const year = new Date().getFullYear();
   const count = await prisma.order.count({
@@ -10,6 +19,56 @@ async function generateOrderNumber() {
   });
   return `PED-${year}-${String(count + 1).padStart(4, "0")}`;
 }
+
+ordersRouter.post("/shipping-quote", async (req, res) => {
+  const { items, deliveryMethod } = req.body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: "Carrito vacío" });
+  }
+
+  if (
+    items.some(
+      (item) =>
+        !item ||
+        typeof item !== "object" ||
+        typeof item.productId !== "string" ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1
+    )
+  ) {
+    return res.status(400).json({ error: "Productos inválidos" });
+  }
+
+  if (deliveryMethod === "retiro") {
+    return res.json({ shipping: 0 });
+  }
+
+  try {
+    const productIds = [
+      ...new Set(items.map((item: { productId: string }) => item.productId)),
+    ];
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds }, active: true },
+      select: { id: true },
+    });
+    const availableProductIds = new Set(products.map((product) => product.id));
+    const unavailableProductId = productIds.find(
+      (productId) => !availableProductIds.has(productId)
+    );
+    if (unavailableProductId) {
+      return res
+        .status(400)
+        .json({ error: `Producto no disponible: ${unavailableProductId}` });
+    }
+
+    const shipping = await getShippingCost();
+    res.json({ shipping });
+  } catch (err: any) {
+    console.error("Error calculando envío:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 ordersRouter.post("/", async (req, res) => {
   try {
@@ -20,7 +79,6 @@ ordersRouter.post("/", async (req, res) => {
     }
 
     let subtotal = 0;
-    let shippingTotal = 0; // 👈 NUEVO: Acumulador de envío
     const validatedItems: any[] = [];
 
     for (const it of items) {
@@ -57,11 +115,6 @@ ordersRouter.post("/", async (req, res) => {
       const price = Number(product.price);
       subtotal += price * it.quantity;
 
-      // 👇 NUEVO: Sumar el costo de envío del producto (multiplicado por cantidad)
-      // Si el producto no tiene shippingCost configurado, usamos 4.99 por defecto.
-      const itemShippingCost = product.shippingCost ? Number(product.shippingCost) : 4.99;
-      shippingTotal += itemShippingCost * it.quantity;
-
       validatedItems.push({
         productId: product.id,
         name: product.name,
@@ -73,8 +126,7 @@ ordersRouter.post("/", async (req, res) => {
       });
     }
 
-    // 👇 NUEVO: Si es retiro en tienda, el envío es $0. Si no, usamos el total calculado.
-    const shipping = deliveryMethod === "retiro" ? 0 : shippingTotal;
+    const shipping = deliveryMethod === "retiro" ? 0 : await getShippingCost();
     
     const total = subtotal + shipping;
     const orderNumber = await generateOrderNumber();

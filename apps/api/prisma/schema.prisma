@@ -169,5 +169,6 @@ model Config {
   whatsappMessage String?
   storeName       String   @default("Sofía")
   currency        String   @default("USD")
+  shippingCost    Decimal  @default(7.5) @db.Decimal(10, 2)
   updatedAt       DateTime @updatedAt
 }

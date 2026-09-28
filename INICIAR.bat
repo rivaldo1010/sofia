@@ -18,17 +18,29 @@ if errorlevel 1 (
     exit /b
 )
 
-echo [1/3] Levantando PostgreSQL...
+echo [1/4] Levantando PostgreSQL...
 docker compose up -d
 
 echo.
-echo [2/3] Arrancando Backend (API)...
-start "Sofía Backend" cmd /k "cd /d "%~dp0apps\api" && pnpm exec tsx src/server.ts"
+echo [2/4] Aplicando migraciones de la base de datos...
+pushd "%~dp0apps\api"
+pnpm exec prisma migrate deploy
+if errorlevel 1 (
+    echo [!] No se pudieron aplicar las migraciones.
+    popd
+    pause
+    exit /b 1
+)
+popd
+
+echo.
+echo [3/4] Arrancando Backend (API)...
+start "Sofía Backend" cmd /k "cd /d "%~dp0apps\api" && pnpm exec tsx watch src/server.ts"
 
 timeout /t 3 /nobreak >nul
 
 echo.
-echo [3/3] Arrancando Frontend (Web)...
+echo [4/4] Arrancando Frontend (Web)...
 start "Sofía Frontend" cmd /k "cd /d "%~dp0" && pnpm --filter web dev"
 
 echo.

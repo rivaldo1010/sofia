@@ -24,6 +24,7 @@ configRouter.get("/", async (_req, res) => {
       whatsappNumber: config.whatsappNumber,
       storeName: config.storeName,
       currency: config.currency,
+      shippingCost: Number(config.shippingCost),
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

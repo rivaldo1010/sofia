@@ -42,6 +42,7 @@ export function Settings() {
     whatsappMessage: "",
     storeName: "",
     currency: "",
+    shippingCost: "7.50",
   });
   const [saved, setSaved] = useState(false);
 
@@ -52,6 +53,7 @@ export function Settings() {
         whatsappMessage: config.whatsappMessage || "",
         storeName: config.storeName || "Sofía",
         currency: config.currency || "USD",
+        shippingCost: String(config.shippingCost ?? 7.5),
       });
     }
   }, [config]);
@@ -172,6 +174,28 @@ export function Settings() {
         </div>
       </div>
 
+      <div className="bg-white rounded-2xl border border-neutral-200 p-6 mb-8">
+        <h2 className="font-bold mb-1">Costo de envío</h2>
+        <p className="text-sm text-neutral-500 mb-4">
+          Esta tarifa se aplica una sola vez a todos los pedidos a domicilio.
+          El retiro en tienda sigue siendo gratis.
+        </p>
+        <label className="block text-sm font-medium mb-1" htmlFor="shippingCost">
+          Envío a domicilio ($)
+        </label>
+        <input
+          id="shippingCost"
+          name="shippingCost"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+          value={form.shippingCost}
+          onChange={(e) => setForm({ ...form, shippingCost: e.target.value })}
+          className="w-full md:max-w-sm px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+        />
+      </div>
+
       {/* Botón guardar */}
       <div className="mb-8">
         <button
@@ -189,6 +213,13 @@ export function Settings() {
             <CheckCircle className="w-4 h-4" />
             ¡Guardado!
           </span>
+        )}
+        {saveMutation.isError && (
+          <p className="mt-3 text-sm text-red-600">
+            {saveMutation.error instanceof Error
+              ? saveMutation.error.message
+              : "Error guardando la configuración"}
+          </p>
         )}
       </div>
 

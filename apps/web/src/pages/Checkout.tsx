@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Check } from "lucide-react";
 import { useCart } from "../store/cart";
@@ -13,8 +13,8 @@ const PROVINCIAS = [
 ];
 
 const METODOS_ENVIO = [
-  { id: "domicilio", label: "Envío a domicilio", price: 4.99 },
-  { id: "retiro", label: "Retiro en tienda", price: 0 },
+  { id: "domicilio", label: "Envío a domicilio" },
+  { id: "retiro", label: "Retiro en tienda" },
 ];
 
 const METODOS_PAGO = [
@@ -40,9 +40,51 @@ export function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("transferencia");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [shippingQuote, setShippingQuote] = useState<number | null>(null);
+  const [shippingError, setShippingError] = useState("");
 
-  const shipping = METODOS_ENVIO.find((m) => m.id === deliveryMethod)?.price || 0;
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const controller = new AbortController();
+    setShippingQuote(null);
+    setShippingError("");
+
+    fetch(`${API_URL}/orders/shipping-quote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        items: items.map(({ productId, quantity }) => ({ productId, quantity })),
+        deliveryMethod,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error calculando el envío");
+        if (typeof data.shipping !== "number" || !Number.isFinite(data.shipping)) {
+          throw new Error("No se recibió un costo de envío válido");
+        }
+        setShippingQuote(data.shipping);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setShippingError(
+          err instanceof Error ? err.message : "Error calculando el envío"
+        );
+      });
+
+    return () => controller.abort();
+  }, [items, deliveryMethod]);
+
+  const shipping = shippingQuote ?? 0;
   const finalTotal = total() + shipping;
+  const shippingQuoteLabel =
+    shippingQuote === null
+      ? shippingError
+        ? "No disponible"
+        : "Calculando..."
+      : `$${shippingQuote.toFixed(2)}`;
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -223,7 +265,7 @@ export function Checkout() {
                     <span className="font-medium">{m.label}</span>
                   </div>
                   <span className="font-bold">
-                    {m.price === 0 ? "Gratis" : `$${m.price.toFixed(2)}`}
+                    {m.id === "retiro" ? "Gratis" : shippingQuoteLabel}
                   </span>
                 </label>
               ))}
@@ -294,14 +336,24 @@ export function Checkout() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Envío</span>
-                <span>{shipping === 0 ? "Gratis" : `$${shipping.toFixed(2)}`}</span>
+                <span>
+                  {shippingQuote === null
+                    ? shippingQuoteLabel
+                    : shipping === 0 ? "Gratis" : `$${shipping.toFixed(2)}`}
+                </span>
               </div>
             </div>
 
             <div className="border-t border-neutral-200 pt-4 mt-4 flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>${finalTotal.toFixed(2)}</span>
+              <span>{shippingQuote === null ? "—" : `$${finalTotal.toFixed(2)}`}</span>
             </div>
+
+            {shippingError && (
+              <p className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">
+                No se pudo calcular el envío: {shippingError}
+              </p>
+            )}
 
             {error && (
               <p className="mt-4 text-sm text-red-500 bg-red-50 p-3 rounded-lg">
@@ -311,7 +363,7 @@ export function Checkout() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || shippingQuote === null}
               className="mt-6 w-full py-4 bg-black text-white rounded-full font-bold hover:bg-neutral-800 transition disabled:bg-neutral-300 flex items-center justify-center gap-2"
             >
               {loading ? (
