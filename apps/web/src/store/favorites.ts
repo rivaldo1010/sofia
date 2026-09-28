@@ -18,7 +18,9 @@ export const useFavorites = create<FavoritesState>((set, get) => ({
   load: async () => {
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/favorites/ids`, { credentials: "include" });
+      const res = await fetch(`${API_URL}/favorites/ids`, {
+        credentials: "include",
+      });
       if (res.ok) {
         const ids = await res.json();
         set({ ids, loaded: true });
@@ -35,6 +37,7 @@ export const useFavorites = create<FavoritesState>((set, get) => ({
     const current = get().ids;
     const isFav = current.includes(productId);
 
+    // Optimistic update
     if (isFav) {
       set({ ids: current.filter((id) => id !== productId) });
     } else {
@@ -42,15 +45,17 @@ export const useFavorites = create<FavoritesState>((set, get) => ({
     }
 
     try {
-      const res = await fetch(`/api/favorites/${productId}`, {
+      const res = await fetch(`${API_URL}/favorites/${productId}`, {
         method: isFav ? "DELETE" : "POST",
         credentials: "include",
       });
 
       if (!res.ok) {
+        // Revertir si falla
         set({ ids: current });
       }
     } catch {
+      // Revertir si falla
       set({ ids: current });
     }
   },
